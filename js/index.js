@@ -14,11 +14,6 @@ function setup() {
   pickLocation();
 }
 
-function mouseClicked() {
-  if ( mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height)
-    play = !play;
-}
-
 function draw() {
   if (!play) {
     background(110);
@@ -35,7 +30,7 @@ function draw() {
   fill(255, 10, 100);
   rect(food.x, food.y, scl, scl);
   if(s.eat(food)) pickLocation();
-  document.getElementById("frameRate").innerHTML = "frame rate : " + fr;
+  // document.getElementById("frameRate").innerHTML = "frame rate : " + fr;
 }
 
 function pickLocation() {
@@ -45,11 +40,16 @@ function pickLocation() {
   food.mult(scl);
 }
 
+function mouseClicked() {
+  if ( mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height)
+    play = !play;
+}
+
 function keyPressed() {
-  if(keyCode == UP_ARROW) s.dir(0, -1);
-  if(keyCode == DOWN_ARROW) s.dir(0, 1);
-  if(keyCode == LEFT_ARROW) s.dir(-1, 0);
-  if(keyCode == RIGHT_ARROW) s.dir(1, 0);
+  if(keyCode == UP_ARROW || keyCode==87) s.dir(0, -1);
+  if(keyCode == DOWN_ARROW || keyCode==83) s.dir(0, 1);
+  if(keyCode == LEFT_ARROW || keyCode==65) s.dir(-1, 0);
+  if(keyCode == RIGHT_ARROW || keyCode==68) s.dir(1, 0);
   if(keyCode == ENTER) play = !play;
 }
 
