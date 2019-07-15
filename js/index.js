@@ -38,6 +38,7 @@ function draw() {
   }
   s.update();
   if(s.x == x && s.y == y) {
+    fr = 20;
     text('DoN\'t ToUcH wAlL :)\npress \'Enter\' to play or pause', width/2 - 200, height/2 - 50, width/2 + 200, height/2 + 50);
     dead = true;
     play = false;
@@ -56,6 +57,7 @@ function draw() {
   rect(food.x+1, food.y+1, scl-2, scl-2);
   if(s.eat(food)) pickLocation();
   document.getElementById("frameRate").innerHTML = "frame rate : " + fr;
+  createFeature(s);
 }
 
 function pickLocation() {
@@ -108,6 +110,7 @@ function Snake() {
         this.y_speed = 0;
         this.total=0;
         this.tail = [];
+        fr = 20;
         pickLocation();
         return dead;
       }
@@ -151,6 +154,41 @@ function Snake() {
     }
     else return false;
   }
+}
+
+function createObstacleArray(snake) {
+  arr = [0 ,0 , 0];
+  for(var i=0; i<snake.tail.length; i++) {
+    var pos = snake.tail[i];
+    var d = dist(snake.x, snake.y, pos.x, pos.y);
+    if(d < 5) {
+      arr[0] = 1;
+      break;
+    }
+  }
+
+  if(snake.x_speed == 1 && snake.x == (width-scl)) arr[0] = 1;
+  else if(snake.x_speed == -1 && snake.x == 0) arr[0] = 1;
+  else if(snake.y_speed == 1 && snake.y == (height-1-scl)) arr[0] = 1;
+  else if(snake.y_speed == -1 && snake.y == 0) arr[0] = 1;
+
+  if(snake.x_speed == -1 && snake.y == (height-scl)) arr[1] = 1;
+  else if(snake.x_speed == 1 && snake.y == 0) arr[1] = 1;
+  else if(snake.y_speed == -1 && snake.x == 0) arr[1] = 1;
+  else if(snake.y_speed == 1 && snake.x == (width-scl)) arr[1] = 1;
+
+  if(snake.y_speed == -1 && snake.x == (width-scl)) arr[2] = 1;
+  else if(snake.y_speed == 1 && snake.x == 0) arr[2] = 1;
+  else if(snake.x_speed == -1 && snake.y == 0) arr[2] = 1;
+  else if(snake.x_speed == 1 && snake.y == (height-scl)) arr[2] = 1;
+
+  return arr;
+}
+
+function createFeature(snake) {
+  arr = createObstacleArray (snake);
+  console.log('feature created...' + arr);
+  return null;
 }
 
 function createModel() {
