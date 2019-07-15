@@ -6,7 +6,6 @@ var defaultHeight = 800;
 var componentSnake;
 var componentFood;
 var play = false;
-var alive = true;
 var currentFrameRate = defaultFrameRate;
 
 var setup = function() {
@@ -17,7 +16,7 @@ var setup = function() {
 }
 
 var draw = function() {
-  document.getElementById("frameRate").innerHTML = currentFrameRate;
+  document.getElementById("frameRate").innerHTML = componentSnake.tail.length;
   document.getElementById("tailLength").innerHTML = componentSnake.tailLength;
   frameRate(currentFrameRate);
   background(51);
@@ -184,6 +183,47 @@ class Snake {
     console.log('snake tail length has been increased');
     return null;
   }
+}
 
 
+function createObstacleArray(snake) {
+  arr = [0 ,0 , 0];
+  for(var i=0; i<snake.tail.length; i++) {
+    var pos = snake.tail[i];
+    var d = dist(snake.x, snake.y, pos.x, pos.y);
+    if(d < 5) {
+      arr[0] = 1;
+      break;
+    }
+  }
+  if(snake.x_speed == 1 && snake.x == (width-scl)) arr[0] = 1;
+  else if(snake.x_speed == -1 && snake.x == 0) arr[0] = 1;
+  else if(snake.y_speed == 1 && snake.y == (height-1-scl)) arr[0] = 1;
+  else if(snake.y_speed == -1 && snake.y == 0) arr[0] = 1;
+
+  if(snake.x_speed == -1 && snake.y == (height-scl)) arr[1] = 1;
+  else if(snake.x_speed == 1 && snake.y == 0) arr[1] = 1;
+  else if(snake.y_speed == -1 && snake.x == 0) arr[1] = 1;
+  else if(snake.y_speed == 1 && snake.x == (width-scl)) arr[1] = 1;
+
+  if(snake.y_speed == -1 && snake.x == (width-scl)) arr[2] = 1;
+  else if(snake.y_speed == 1 && snake.x == 0) arr[2] = 1;
+  else if(snake.x_speed == -1 && snake.y == 0) arr[2] = 1;
+  else if(snake.x_speed == 1 && snake.y == (height-scl)) arr[2] = 1;
+
+  return arr;
+}
+
+function createFeature(snake) {
+  arr = createObstacleArray (snake);
+  console.log('feature created...' + arr);
+  return null;
+}
+
+function createModel() {
+  const model = tf.sequential();
+  model.add(tf.layers.dense({units: 32, batchInputShape: [null, 50], activation: 'relu'}));
+  model.add(tf.layers.dense({units: 4, activation: 'relu'}));
+  console.log(JSON.stringify(model.outputs[0].shape));
+  return model;
 }
