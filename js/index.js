@@ -1,200 +1,189 @@
-var s;
-var scl = 20;
-var fr = 20;
+var defaultFrameRate = 20;
+var defaultScale = 20;
+var defaultWidth = 800;
+var defaultHeight = 800;
+
+var componentSnake;
+var componentFood;
 var play = false;
-var dead = false;
-var x = -1;
-var y = -1;
-document.getElementByName("start_game").onclick = function game() {
-  draw()
+var alive = true;
+var currentFrameRate = defaultFrameRate;
+
+var setup = function() {
+  createCanvas(defaultWidth, defaultHeight).parent('sketch');
+  frameRate(currentFrameRate);
+  componentSnake = new Snake();
+  componentFood = new Food();
 }
 
-function setup() {
-  createModel();
-  createCanvas(600, 600).parent("sketch");
-  s = new Snake();
-  frameRate(fr);
-  pickLocation();
-}
-
-function draw() {
-  if(dead) {
-    play = false;
-    return null;
-  }
-  if (!play) {
+var draw = function() {
+  document.getElementById("frameRate").innerHTML = currentFrameRate;
+  document.getElementById("tailLength").innerHTML = componentSnake.tailLength;
+  frameRate(currentFrameRate);
+  background(51);
+  if (componentSnake.alive) if (!play) {
     background(110);
     textSize(30);
     fill(0);
     text('press \'Enter\' to play or pause', width/2 - 200, height/2 - 50, width/2 + 200, height/2 + 50);
+    noLoop();
     return null;
   }
-  frameRate(fr);
-  background(51);
-  x = s.x;
-  y = s.y;
-  if(s.death()){
-    return false;
-  }
-  s.update();
-  if(s.x == x && s.y == y) {
-    fr = 20;
-    text('DoN\'t ToUcH wAlL :)\npress \'Enter\' to play or pause', width/2 - 200, height/2 - 50, width/2 + 200, height/2 + 50);
-    dead = true;
+  if (componentSnake.alive) componentSnake.update();
+  let aliveCode = componentSnake.isAlive();
+  if (aliveCode == -2) {
+    frameRate(defaultFrameRate);
     play = false;
-    console.log('Starting over');
-    s.x = 0;
-    s.y = 0;
-    s.x_speed = 1;
-    s.y_speed = 0;
-    s.total=0;
-    s.tail = [];
-    pickLocation();
-    return dead;
+    text('DoN\'t ToUcH wAlL :)\npress \'Enter\' to try to play again', width/2 - 200, height/2 - 50, width/2 + 200, height/2 + 50);
+    console.log('press \'Enter\' to start over');
+    noLoop();
+    return null;
   }
-  s.show();
-  fill(255, 10, 100);
-  rect(food.x+1, food.y+1, scl-2, scl-2);
-  if(s.eat(food)) pickLocation();
-  document.getElementById("frameRate").innerHTML = "frame rate : " + fr;
-  createFeature(s);
-}
-
-function pickLocation() {
-  var cols = floor(width/scl);
-  var rows = floor(height/scl);
-  food = createVector(floor(random(cols)), floor(random(rows)));
-  food.mult(scl);
-}
-
-function mouseClicked() {
-  if ( mouseX >= 0 && mouseX <= width && mouseY >= 0 && mouseY <= height)
-    play = !play;
+  else if (aliveCode == -1) {
+    frameRate(defaultFrameRate);
+    play = false;
+    textSize(30);
+    fill(0);
+    text('You make the snake eat itself :)\npress \'Enter\' to try to play again ', width/2 - 200, height/2 - 50, width/2 + 200, height/2 + 50);
+    noLoop();
+    return null;
+  }
+  if(isFoodEaten(componentSnake, componentFood)) {
+    componentFood.changePosition();
+    componentSnake.digest();
+  }
+  componentSnake.show();
+  componentFood.show();
 }
 
 function keyPressed() {
-  if(keyCode == UP_ARROW || keyCode==87) s.dir(0, -1);
-  if(keyCode == DOWN_ARROW || keyCode==83) s.dir(0, 1);
-  if(keyCode == LEFT_ARROW || keyCode==65) s.dir(-1, 0);
-  if(keyCode == RIGHT_ARROW || keyCode==68) s.dir(1, 0);
+  if(keyCode == UP_ARROW || keyCode==87) componentSnake.changeDirection(0, -1);
+  if(keyCode == DOWN_ARROW || keyCode==83) componentSnake.changeDirection(0, 1);
+  if(keyCode == LEFT_ARROW || keyCode==65) componentSnake.changeDirection(-1, 0);
+  if(keyCode == RIGHT_ARROW || keyCode==68) componentSnake.changeDirection(1, 0);
   if(keyCode == ENTER) {
     play = !play;
-    dead = false;
+    if (!componentSnake.alive) {
+      currentFrameRate = defaultFrameRate;
+      componentSnake.reinitializeSnake();
+      componentFood.changePosition();
+      console.log('Starting a new game');
+    }
+    if(play) loop();
   }
 }
 
-function Snake() {
-  this.x = 0;
-  this.y = 0;
-  this.x_speed = 1;
-  this.y_speed = 0;
-  this.total=0;
-  this.tail = [];
+function isFoodEaten(snake, food) {
+  if(dist(snake.x, snake.y, food.x, food.y) < defaultScale)
+    return true;
+  return false;
+}
 
-  this.death = function() {
-    document.getElementById("tailLength").innerHTML = "snake length = " + s.tail.length;
-    for(var i=0; i<this.tail.length; i++) {
-      var pos = this.tail[i];
-      var d = dist(this.x, this.y, pos.x, pos.y);
-      if(d < 5){
-        background(110);
-        textSize(30);
-        fill(0);
-        text('You loSt :)\npress \'Enter\' to play or pause', width/2 - 200, height/2 - 50, width/2 + 200, height/2 + 50);
-        dead = true;
-        play = false;
-        console.log('Starting over');
-        this.x = 0;
-        this.y = 0;
-        this.x_speed = 1;
-        this.y_speed = 0;
-        this.total=0;
-        this.tail = [];
-        fr = 20;
-        pickLocation();
-        return dead;
-      }
-    }
-    return dead;
+function mouseClicked() {
+  componentSnake.tailLength++;
+}
+
+class Food {
+  constructor() {
+    this.x = floor(random(floor(width/defaultScale)))*defaultScale;
+    this.y = floor(random(floor(height/defaultScale)))*defaultScale;
+    console.log('component food has been created and displayed at ' + this.x + ',' + this.y);
   }
 
-  this.update = function() {
-    for (var i=0; i<this.tail.length-1; i++) this.tail[i] = this.tail[i+1];
-    this.tail[this.total-1] = createVector(this.x, this.y);
-    this.x = this.x + this.x_speed*scl;
-    this.y = this.y + this.y_speed*scl;
-    this.x = constrain(this.x, 0, width-scl);
-    this.y = constrain(this.y, 0, height-scl);
+  show = function() {
+    fill(255, 10, 100);
+    rect(this.x+1, this.y+1, defaultScale-2, defaultScale-2);
+    // console.log('component food has been displayed at ' + this.x + ',' + this.y);
   }
 
-  this.show = function() {
+  changePosition = function() {
+    this.x = floor(random(floor(width/defaultScale)))*defaultScale;
+    this.y = floor(random(floor(height/defaultScale)))*defaultScale;
+    console.log('food location has been updated');
+  }
+}
+
+class Snake {
+  constructor() {
+    this.x = 0;
+    this.y = 0;
+    this.speedX = 1;
+    this.speedY = 0;
+    this.tailLength = 0;
+    this.tail = [];
+    this.alive = true;
+    console.log('new Snake component has been initialized');
+  }
+
+  reinitializeSnake = function(){
+    this.x = 0;
+    this.y = 0;
+    this.speedX = 1;
+    this.speedY = 0;
+    this.tailLength = 0;
+    this.tail = [];
+    this.alive = true;
+    console.log('snake has been reinitialized');
+  }
+
+  show = function() {
     fill(255);
-    rect(this.x+1, this.y+1, scl-2, scl-2);
+    rect(this.x + 1, this.y + 1, defaultScale - 2, defaultScale - 2);
     fill(0);
-    line(this.x + 10 + 5*this.x_speed, this.y + 10 + 5*this.y_speed, this.x + 10 + this.x_speed*10, this.y + 10 + this.y_speed*10);
+    line(this.x + 10 + 5*this.speedX, this.y + 10 + 5*this.speedY, this.x + 10 + 10*this.speedX, this.y + 10 + 10*this.speedY);
     for(var i=0; i<this.tail.length; i++) {
       fill(175 + (80*(i+1)/(this.tail.length+1)));
-      rect(this.tail[i].x + 1, this.tail[i].y + 1, scl-2, scl-2);
+      rect(this.tail[i].x + 1, this.tail[i].y + 1, defaultScale - 2, defaultScale - 2);
     }
+    // console.log('snake has been drawn');
+    return null;
   }
 
-  this.dir = function(x, y) {
-    if(this.x_speed * x != -1 && this.y_speed * y != -1) {
-      this.x_speed = x;
-      this.y_speed = y;
+  isAlive = function() {
+    if(this.x < 0 || this.x > width-defaultScale || this.y < 0 || this.y > height-defaultScale) {
+      this.alive = false;
+      console.log('Snake hit the wall');
+      return -2;
     }
+    for(var i=0; i<this.tail.length; i++) {
+      var position = this.tail[i];
+      var distance = dist(this.x, this.y, position.x, position.y);
+      if( distance < defaultScale) {
+        this.alive = false;
+        console.log('snake ate itself');
+        return -1;
+      }
+    }
+    return 0;
   }
 
-  this.eat = function(pos) {
-    var d = dist(this.x, this.y, pos.x, pos.y);
-    if (d < 5){
-      fr = fr + 0.02;
-      this.total++;
-      return true;
-    }
-    else return false;
-  }
-}
-
-function createObstacleArray(snake) {
-  arr = [0 ,0 , 0];
-  for(var i=0; i<snake.tail.length; i++) {
-    var pos = snake.tail[i];
-    var d = dist(snake.x, snake.y, pos.x, pos.y);
-    if(d < 5) {
-      arr[0] = 1;
-      break;
-    }
+  update = function() {
+    for(var i=0; i<this.tail.length-1; i++) this.tail[i] = this.tail[i+1];
+    this.tail[this.tailLength-1] = createVector(this.x, this.y);
+    this.x = this.x + this.speedX * defaultScale;
+    this.y = this.y + this.speedY * defaultScale;
+    this.x = constrain(this.x, -1, width - defaultScale +1);
+    this.y = constrain(this.y, -1, height - defaultScale + 1);
+    console.log('snake component has been updated');
+    return null;
   }
 
-  if(snake.x_speed == 1 && snake.x == (width-scl)) arr[0] = 1;
-  else if(snake.x_speed == -1 && snake.x == 0) arr[0] = 1;
-  else if(snake.y_speed == 1 && snake.y == (height-1-scl)) arr[0] = 1;
-  else if(snake.y_speed == -1 && snake.y == 0) arr[0] = 1;
+  changeDirection = function(x, y) {
+    if(this.speedX * x >= 0 && this.speedY * y >= 0){
+      this.speedX = x;
+      this.speedY = y;
+    }
+    console.log('direction has been updated')
+    return null;
+  }
 
-  if(snake.x_speed == -1 && snake.y == (height-scl)) arr[1] = 1;
-  else if(snake.x_speed == 1 && snake.y == 0) arr[1] = 1;
-  else if(snake.y_speed == -1 && snake.x == 0) arr[1] = 1;
-  else if(snake.y_speed == 1 && snake.x == (width-scl)) arr[1] = 1;
+  digest = function(position) {
+    currentFrameRate = currentFrameRate + 0.02;
+    console.log('frame rate has been increased by 0.02 frames per second');
+    this.tailLength++;
+    console.log('snake tail length has been increased');
+    return null;
+  }
 
-  if(snake.y_speed == -1 && snake.x == (width-scl)) arr[2] = 1;
-  else if(snake.y_speed == 1 && snake.x == 0) arr[2] = 1;
-  else if(snake.x_speed == -1 && snake.y == 0) arr[2] = 1;
-  else if(snake.x_speed == 1 && snake.y == (height-scl)) arr[2] = 1;
 
-  return arr;
-}
-
-function createFeature(snake) {
-  arr = createObstacleArray (snake);
-  console.log('feature created...' + arr);
-  return null;
-}
-
-function createModel() {
-  const model = tf.sequential();
-  model.add(tf.layers.dense({units: 32, batchInputShape: [null, 50], activation: 'relu'}));
-  model.add(tf.layers.dense({units: 4, activation: 'relu'}));
-  console.log(JSON.stringify(model.outputs[0].shape));
-  return model;
 }
