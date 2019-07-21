@@ -220,6 +220,17 @@ function createFeature(snake) {
   return null;
 }
 
+class neuralNetwork {
+  constructor(inputs, hidden, outputs, lr) {
+    this.model = tf.sequential();
+    const hiddenLayer = tf.layers.dense({
+      units: hidden,
+      inputShape: [inputs],
+      activation: 'sigmoid'
+    })
+  }
+}
+
 function createModel() {
   const model = tf.sequential();
   model.add(tf.layers.dense({units: 32, batchInputShape: [null, 50], activation: 'relu'}));
